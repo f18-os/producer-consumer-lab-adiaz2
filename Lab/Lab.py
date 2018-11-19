@@ -145,15 +145,7 @@ display = threading.Thread(name='display', target=displayFrames, args=(grayscale
 extract.start()
 convert.start()
 displayFrames(grayscaleQueue)
-#display.start()
 
-# extract the frames
-# extractFrames(filename,extractionQueue)
-
-# convertFrames(filename, extractionQueue, grayscaleQueue)
-
-# # display the frames
-# displayFrames(grayscaleQueue)
 
 
 
