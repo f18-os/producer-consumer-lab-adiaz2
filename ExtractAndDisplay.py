@@ -6,6 +6,10 @@ import numpy as np
 import base64
 import queue
 
+# globals
+outputDir    = 'frames'
+clipFileName = 'clip.mp4'
+
 def extractFrames(fileName, outputBuffer):
     # Initialize frame count 
     count = 0
@@ -32,6 +36,49 @@ def extractFrames(fileName, outputBuffer):
         count += 1
 
     print("Frame extraction complete")
+
+
+
+def convertFrames(fileName, inputBuffer, outputBuffer):
+    # initialize frame count
+    count = 0    
+
+    while not inputBuffer.empty():
+        print("Converting frame {}".format(count))
+
+            # load the next file
+        frameAsText = inputBuffer.get()
+
+        # decode the frame 
+        jpgRawImage = base64.b64decode(frameAsText)
+
+        # convert the raw frame to a numpy array
+        jpgImage = np.asarray(bytearray(jpgRawImage), dtype=np.uint8)
+
+        inputFrame = cv2.imdecode( jpgImage ,cv2.IMREAD_UNCHANGED)
+
+        # convert the image to grayscale
+        grayscaleFrame = cv2.cvtColor(inputFrame, cv2.COLOR_BGR2GRAY)
+
+        success, jpgImage = cv2.imencode('.jpg', grayscaleFrame)
+
+        #encode the frame as base 64 to make debugging easier
+        jpgAsText = base64.b64encode(jpgImage)
+
+        # add the frame to the buffer
+        outputBuffer.put(jpgAsText)
+        
+        # # generate output file name
+        # outFileName = "{}/grayscale_{:04d}.jpg".format(outputDir, count)
+
+        # # write output file
+        # cv2.imwrite(outFileName, grayscaleFrame)
+
+        count += 1
+
+        # # generate input file name for the next frame
+        # inFileName = "{}/frame_{:04d}.jpg".format(outputDir, count)
+
 
 
 def displayFrames(inputBuffer):
@@ -72,9 +119,12 @@ filename = 'clip.mp4'
 # shared queue  
 extractionQueue = queue.Queue()
 
+grayscaleQueue = queue.Queue()
+
 # extract the frames
 extractFrames(filename,extractionQueue)
 
-# display the frames
-displayFrames(extractionQueue)
+convertFrames(filename, extractionQueue, grayscaleQueue)
 
+# display the frames
+displayFrames(grayscaleQueue)
