@@ -97,7 +97,6 @@ def displayFrames(inputBuffer):
     # initialize frame count
     count = 0
     while True:
-        lock.acquire()
         # go through each frame in the buffer until the buffer is empty
         while not inputBuffer.empty():
             # get the next frame
@@ -117,11 +116,9 @@ def displayFrames(inputBuffer):
             # display the image in a window called "video" and wait 42ms
             # before displaying the next frame
             cv2.imshow("Video", img)
-            if cv2.waitKey(24) and 0xFF == ord("q"):
+            if cv2.waitKey(42) and 0xFF == ord("q"):
                 break
-            #time.sleep(0.001)
             count += 1
-        lock.release()
         if finishedExtracting and finishedConverting:
             print("Finished displaying all frames")
             # cleanup the windows
