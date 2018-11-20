@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import threading
+from threading import Lock
 import cv2
 import time
 import numpy as np
@@ -10,6 +11,7 @@ import queue
 # globals
 outputDir    = 'frames'
 clipFileName = 'clip.mp4'
+lock = Lock()
 
 global finishedExtracting
 finishedExtracting = False
@@ -28,6 +30,7 @@ def extractFrames(fileName, outputBuffer):
     
     print("Reading frame {} {} ".format(count, success))
     while success:
+        lock.acquire()
         # get a jpg encoded frame
         success, jpgImage = cv2.imencode('.jpg', image)
 
@@ -41,11 +44,10 @@ def extractFrames(fileName, outputBuffer):
         print('Reading frame {} {}'.format(count, success))
         count += 1
         time.sleep(0.01)
+        lock.release()
     print("Frame extraction complete")
     global finishedExtracting
     finishedExtracting = True
-    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-
 
 
 def convertFrames(inputBuffer, outputBuffer):
@@ -53,6 +55,7 @@ def convertFrames(inputBuffer, outputBuffer):
     count = 0    
     global finishedExtracting
     while True:
+        lock.acquire()
         while not inputBuffer.empty():
             print("Converting frame {}".format(count))
 
@@ -81,11 +84,10 @@ def convertFrames(inputBuffer, outputBuffer):
             time.sleep(0.01)
             
             count += 1
-
+        lock.release()
         if finishedExtracting:
             global finishedConverting
             finishedConverting = True
-            print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
             return
 
 
@@ -95,6 +97,7 @@ def displayFrames(inputBuffer):
     # initialize frame count
     count = 0
     while True:
+        lock.acquire()
         # go through each frame in the buffer until the buffer is empty
         while not inputBuffer.empty():
             # get the next frame
@@ -116,9 +119,9 @@ def displayFrames(inputBuffer):
             cv2.imshow("Video", img)
             if cv2.waitKey(24) and 0xFF == ord("q"):
                 break
-            time.sleep(0.001)
+            #time.sleep(0.001)
             count += 1
-
+        lock.release()
         if finishedExtracting and finishedConverting:
             print("Finished displaying all frames")
             # cleanup the windows
